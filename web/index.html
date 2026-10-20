@@ -1,0 +1,678 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>Servidor UdeA - Proyecto Final</title>
+<style>
+  * { box-sizing: border-box; }
+  body { margin: 0; font-family: "Segoe UI", Arial, sans-serif; background: #eef2ef; color: #222; line-height: 1.5; }
+  header { background: linear-gradient(135deg, #024d29, #0a8f4f); color: #fff; padding: 30px 20px 22px; text-align: center; }
+  header h1 { margin: 0 0 6px; font-size: 32px; }
+  header p { margin: 0; opacity: .9; }
+  .info { display: flex; justify-content: center; flex-wrap: wrap; margin-top: 16px; }
+  .chip { background: rgba(255,255,255,.18); border-radius: 20px; padding: 6px 14px; margin: 4px; font-size: 14px; }
+  .progreso { max-width: 960px; margin: 22px auto 0; padding: 0 16px; }
+  .barra { background: #cfd8d2; border-radius: 10px; height: 14px; overflow: hidden; }
+  .relleno { background: #0a8f4f; height: 100%; width: 0; transition: width 1.4s; }
+  .progreso small { display: block; margin-top: 6px; color: #555; }
+  nav { display: flex; flex-wrap: wrap; justify-content: center; max-width: 960px; margin: 20px auto 0; padding: 0 16px; }
+  nav button { border: 0; background: #fff; color: #026937; padding: 10px 18px; margin: 4px; border-radius: 8px; cursor: pointer; font-size: 15px; font-weight: bold; box-shadow: 0 1px 3px rgba(0,0,0,.15); }
+  nav button:hover { background: #e3f2e9; }
+  nav button.activo { background: #026937; color: #fff; }
+  main { max-width: 960px; margin: 16px auto 40px; padding: 0 16px; }
+  .panel { display: none; background: #fff; border-radius: 10px; padding: 26px; box-shadow: 0 2px 8px rgba(0,0,0,.1); }
+  .panel.activo { display: block; }
+  h2 { color: #026937; margin-top: 0; }
+  h3 { color: #024d29; border-bottom: 2px solid #e3f2e9; padding-bottom: 4px; margin-top: 28px; }
+  .estado { display: inline-block; padding: 3px 10px; border-radius: 12px; font-size: 13px; font-weight: bold; background: #d4edda; color: #155724; vertical-align: middle; }
+  .resumen { display: flex; flex-wrap: wrap; margin: 0 -6px; }
+  .dato { flex: 1 1 160px; margin: 6px; padding: 12px; background: #f6faf7; border-radius: 8px; text-align: center; }
+  .dato b { display: block; font-size: 20px; color: #026937; }
+  .dato span { font-size: 13px; color: #555; }
+  .tarjetas { display: flex; flex-wrap: wrap; margin: 0 -6px; }
+  .tarjeta { flex: 1 1 200px; margin: 6px; padding: 16px; border-radius: 8px; background: #f6faf7; border-left: 5px solid #0a8f4f; cursor: pointer; }
+  .tarjeta:hover { background: #e3f2e9; }
+  .tarjeta h4 { margin: 0 0 6px; font-size: 18px; }
+  .acc { border: 1px solid #d5ddd8; border-radius: 8px; margin: 10px 0; overflow: hidden; }
+  .acc-titulo { background: #f6faf7; padding: 12px 16px; cursor: pointer; font-weight: bold; }
+  .acc-titulo:hover { background: #e3f2e9; }
+  .acc-titulo span { float: right; font-size: 18px; }
+  .acc-cuerpo { display: none; padding: 12px 16px; }
+  .acc.abierto .acc-cuerpo { display: block; }
+  pre, .consola { background: #1e2a22; color: #b9f6ca; padding: 12px; border-radius: 6px; overflow-x: auto; font-size: 13px; font-family: Consolas, "Courier New", monospace; white-space: pre-wrap; }
+  code { background: #eef2ef; padding: 1px 5px; border-radius: 4px; font-family: Consolas, "Courier New", monospace; }
+  table { border-collapse: collapse; width: 100%; margin: 10px 0; }
+  th, td { border: 1px solid #d5ddd8; padding: 8px; text-align: left; font-size: 14px; vertical-align: top; }
+  th { background: #026937; color: #fff; }
+  .nota { background: #fff8e1; border-left: 5px solid #e0a800; padding: 10px 14px; border-radius: 6px; margin: 12px 0; font-size: 14px; }
+  .stepper { border: 2px solid #0a8f4f; border-radius: 10px; padding: 18px; margin: 12px 0; background: #fbfdfc; }
+  .st-flujo { display: flex; align-items: center; justify-content: center; margin-bottom: 12px; min-height: 60px; }
+  .nm { background: #026937; color: #fff; padding: 10px 14px; border-radius: 8px; font-weight: bold; font-size: 14px; text-align: center; min-width: 110px; }
+  .fl { flex: 1; text-align: center; color: #026937; font-weight: bold; font-size: 13px; padding: 0 8px; }
+  .fl div { border-top: 3px solid #0a8f4f; margin-top: 4px; position: relative; }
+  .st-num { color: #888; font-size: 13px; }
+  .st-tit { margin: 4px 0; color: #024d29; }
+  .st-puntos { margin: 10px 0; }
+  .st-puntos i { display: inline-block; width: 10px; height: 10px; border-radius: 50%; background: #cfd8d2; margin-right: 6px; }
+  .st-puntos i.on { background: #0a8f4f; }
+  .btn { border: 0; background: #026937; color: #fff; padding: 8px 16px; border-radius: 6px; cursor: pointer; font-size: 14px; margin: 3px; }
+  .btn:hover { background: #0a8f4f; }
+  .btn.sec { background: #e3f2e9; color: #026937; }
+  .btn[disabled] { opacity: .4; cursor: default; }
+  .entrada { display: flex; margin: 10px 0; }
+  .entrada input { flex: 1; padding: 9px; font-size: 15px; border: 2px solid #0a8f4f; border-radius: 6px 0 0 6px; font-family: Consolas, monospace; }
+  .entrada button { border-radius: 0 6px 6px 0; margin: 0; }
+  .consola { min-height: 140px; max-height: 320px; overflow-y: auto; }
+  .codigos button { min-width: 70px; }
+  .topo { display: flex; align-items: center; justify-content: center; flex-wrap: wrap; margin: 20px 0; }
+  .nodo { background: #f6faf7; border: 2px solid #0a8f4f; border-radius: 10px; padding: 16px; width: 250px; text-align: center; }
+  .linea { flex: 0 0 140px; text-align: center; color: #026937; font-weight: bold; }
+  .linea div { border-top: 3px dashed #0a8f4f; margin: 6px 0; }
+  .pregunta { background: #f6faf7; border-radius: 8px; padding: 14px; margin: 12px 0; }
+  .pregunta button { display: block; width: 100%; text-align: left; background: #fff; color: #222; border: 1px solid #cfd8d2; margin: 5px 0; }
+  .pregunta button.bien { background: #d4edda; border-color: #0a8f4f; }
+  .pregunta button.mal { background: #f8d7da; border-color: #c82333; }
+  .expl { font-size: 14px; color: #024d29; margin-top: 6px; }
+  footer { text-align: center; color: #666; font-size: 13px; padding-bottom: 30px; }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Servidor www.udea.edu.co</h1>
+  <p>Proyecto final - Administración de Servidores Linux</p>
+  <div class="info">
+    <div class="chip">Estudiante: Sebastian Jaramillo Benitez</div>
+    <div class="chip">Servidor: 192.168.1.10</div>
+    <div class="chip" id="acceso">Accediste por: ...</div>
+    <div class="chip" id="reloj">--:--:--</div>
+  </div>
+</header>
+<div style="background:#ffc107;color:#222;text-align:center;padding:12px;font-weight:bold;font-size:16px;">Sitio actualizado por Sebastian Jaramillo - Prueba de modificación del servidor Apache - 20/10/2026</div>
+
+<div class="progreso">
+  <div class="barra"><div class="relleno" id="relleno"></div></div>
+  <small id="txtProgreso">Avance del proyecto</small>
+</div>
+
+<nav>
+  <button class="activo" data-tab="inicio">Inicio</button>
+  <button data-tab="dhcp">DHCP</button>
+  <button data-tab="dns">DNS</button>
+  <button data-tab="apache">Apache</button>
+  <button data-tab="ftp">FTP</button>
+  <button data-tab="red">Topología</button>
+  <button data-tab="quiz">Quiz</button>
+</nav>
+
+<main>
+
+<!-- ================= INICIO ================= -->
+<section class="panel activo" id="inicio">
+  <h2>Proyecto: servidor de servicios de red en Linux</h2>
+  <p>Se configuró un servidor <b>Ubuntu 20.04</b> que ofrece cuatro servicios de red a un cliente <b>Windows XP</b>, ambos en una red interna de VirtualBox. Todas las pruebas se realizaron <b>desde el cliente</b>. Haz clic en cada servicio para ver qué es, cómo se configuró y cómo se probó.</p>
+  <div class="resumen">
+    <div class="dato"><b>4 / 4</b><span>Servicios funcionando</span></div>
+    <div class="dato"><b>192.168.1.10</b><span>IP fija del servidor</span></div>
+    <div class="dato"><b>192.168.1.50</b><span>IP recibida por el cliente</span></div>
+    <div class="dato"><b>udea.edu.co</b><span>Dominio configurado</span></div>
+  </div>
+  <h3>Servicios</h3>
+  <div class="tarjetas">
+    <div class="tarjeta" data-ir="dhcp"><h4>DHCP</h4><span class="estado">Funcionando</span><p>Entrega automáticamente IP, máscara, puerta de enlace y DNS.</p></div>
+    <div class="tarjeta" data-ir="dns"><h4>DNS</h4><span class="estado">Funcionando</span><p>Traduce udea.edu.co a 192.168.1.10 y viceversa.</p></div>
+    <div class="tarjeta" data-ir="apache"><h4>Apache</h4><span class="estado">Funcionando</span><p>Publica este sitio web por HTTP.</p></div>
+    <div class="tarjeta" data-ir="ftp"><h4>FTP</h4><span class="estado">Funcionando</span><p>Sube y descarga archivos entre cliente y servidor.</p></div>
+  </div>
+  <h3>Resumen</h3>
+  <table>
+    <tr><th>Servicio</th><th>Paquete</th><th>Puerto</th><th>Origen</th><th>Modificación principal</th></tr>
+    <tr><td>DHCP</td><td>isc-dhcp-server</td><td>UDP 67/68</td><td>Guía del profesor</td><td>Rango 192.168.1.50 - 192.168.1.100</td></tr>
+    <tr><td>DNS</td><td>bind9</td><td>53</td><td>Guía del profesor</td><td>Dominio udea.edu.co y correcciones a la guía</td></tr>
+    <tr><td>Web</td><td>apache2</td><td>TCP 80</td><td>Elección propia</td><td>Sitio web propio del proyecto</td></tr>
+    <tr><td>FTP</td><td>vsftpd</td><td>TCP 20/21</td><td>Elección propia</td><td>Usuario dedicado, chroot y banner propio</td></tr>
+  </table>
+</section>
+
+<!-- ================= DHCP ================= -->
+<section class="panel" id="dhcp">
+  <h2>DHCP <span class="estado">Funcionando</span></h2>
+  <p><b>DHCP</b> (Dynamic Host Configuration Protocol) asigna automáticamente la configuración de red a los equipos que se conectan. Sin él habría que escribir a mano la IP, la máscara, la puerta de enlace y el DNS en cada computador. El servidor escucha en el puerto <b>UDP 67</b> y el cliente responde desde el <b>UDP 68</b>.</p>
+
+  <h3>Cómo funciona: proceso DORA</h3>
+  <p>Avanza paso a paso para ver cómo el cliente XP obtuvo su IP.</p>
+  <div class="stepper" id="st-dhcp">
+    <div class="st-flujo"></div>
+    <div class="st-num"></div>
+    <h4 class="st-tit"></h4>
+    <p class="st-txt"></p>
+    <div class="st-puntos"></div>
+    <button class="btn sec st-ant">Anterior</button>
+    <button class="btn st-sig">Siguiente</button>
+  </div>
+
+  <h3>Datos entregados</h3>
+  <table>
+    <tr><th>Dato</th><th>Guía</th><th>Este proyecto</th></tr>
+    <tr><td>Rango de IPs</td><td>192.168.1.11 - 192.168.1.20</td><td><b>192.168.1.50 - 192.168.1.100</b></td></tr>
+    <tr><td>Subred / máscara</td><td colspan="2">192.168.1.0 / 255.255.255.0</td></tr>
+    <tr><td>Puerta de enlace</td><td colspan="2">192.168.1.1</td></tr>
+    <tr><td>Broadcast</td><td colspan="2">192.168.1.255</td></tr>
+    <tr><td>Servidores DNS</td><td colspan="2">192.168.1.10 (este servidor), 8.8.8.8</td></tr>
+    <tr><td>Tiempo de préstamo</td><td colspan="2">600 s por defecto, 7200 s máximo</td></tr>
+  </table>
+
+  <h3>Configuración</h3>
+  <div class="acc"><div class="acc-titulo">1. IP fija del servidor <span>+</span></div><div class="acc-cuerpo">
+    <p>El servidor DHCP necesita una IP fija dentro de la red que administra. Se configuró por interfaz gráfica (IPv4 manual):</p>
+    <pre>IP: 192.168.1.10   Máscara: 255.255.255.0   Puerta: 192.168.1.1   DNS: 192.168.1.10</pre>
+  </div></div>
+  <div class="acc"><div class="acc-titulo">2. Interfaz de escucha <span>+</span></div><div class="acc-cuerpo">
+    <p>En <code>/etc/default/isc-dhcp-server</code> se indica por qué tarjeta de red atiende el servicio:</p>
+    <pre>INTERFACESv4="enp0s3"</pre>
+  </div></div>
+  <div class="acc"><div class="acc-titulo">3. Declaración de la subred <span>+</span></div><div class="acc-cuerpo">
+    <pre>sudo cp /etc/dhcp/dhcpd.conf /etc/dhcp/dhcpd.conf.original
+sudo nano /etc/dhcp/dhcpd.conf</pre>
+    <pre>subnet 192.168.1.0 netmask 255.255.255.0 {
+  range 192.168.1.50 192.168.1.100;
+  option domain-name-servers 192.168.1.10, 8.8.8.8;
+  option domain-name "serv.dhcpserver.public";
+  option routers 192.168.1.1;
+  option broadcast-address 192.168.1.255;
+  default-lease-time 600;
+  max-lease-time 7200;
+}</pre>
+    <table>
+      <tr><th>Directiva</th><th>Significado</th></tr>
+      <tr><td>subnet / netmask</td><td>Red que administra el servidor</td></tr>
+      <tr><td>range</td><td>IPs que puede prestar</td></tr>
+      <tr><td>domain-name-servers</td><td>DNS que usará el cliente</td></tr>
+      <tr><td>routers</td><td>Puerta de enlace</td></tr>
+      <tr><td>default / max-lease-time</td><td>Cuánto tiempo puede usar el cliente la IP antes de renovarla</td></tr>
+    </table>
+  </div></div>
+  <div class="acc"><div class="acc-titulo">4. Arranque automático y reinicio <span>+</span></div><div class="acc-cuerpo">
+    <p>Se agregó un ajuste para que el servicio espere a la red y se reintente si arranca antes que la interfaz:</p>
+    <pre>/etc/systemd/system/isc-dhcp-server.service.d/override.conf
+After=network-online.target
+Restart=on-failure</pre>
+    <pre>sudo systemctl restart isc-dhcp-server
+systemctl status isc-dhcp-server</pre>
+  </div></div>
+
+  <h3>Pruebas desde el cliente</h3>
+  <table>
+    <tr><th>Prueba</th><th>Comando en XP</th><th>Resultado</th></tr>
+    <tr><td>Pedir IP nueva</td><td><code>ipconfig /release</code> y <code>ipconfig /renew</code></td><td>Recibió 192.168.1.50</td></tr>
+    <tr><td>Ver configuración</td><td><code>ipconfig /all</code></td><td>Servidor DHCP 192.168.1.10, DNS 192.168.1.10</td></tr>
+    <tr><td>Servicio apagado</td><td><code>ipconfig /renew</code></td><td>No obtiene IP</td></tr>
+    <tr><td>Registro en el servidor</td><td><code>cat /var/lib/dhcp/dhcpd.leases</code></td><td>Aparece la MAC del cliente XP</td></tr>
+  </table>
+</section>
+
+<!-- ================= DNS ================= -->
+<section class="panel" id="dns">
+  <h2>DNS <span class="estado">Funcionando</span></h2>
+  <p><b>DNS</b> (Domain Name System) traduce nombres fáciles de recordar, como <code>www.udea.edu.co</code>, a direcciones IP como <code>192.168.1.10</code>. También hace lo contrario, de IP a nombre, lo que se llama <b>resolución inversa</b>. Se usó <b>bind9</b>, que atiende en el puerto <b>53</b>. Dominio configurado: <b>udea.edu.co</b> (la guía usa dominio.edu.co).</p>
+
+  <h3>Prueba el DNS aquí (nslookup simulado)</h3>
+  <p>Escribe un nombre o una IP y presiona Enter. Responde con los mismos registros configurados en el servidor.</p>
+  <div class="entrada"><input id="dnsIn" value="www.udea.edu.co"><button class="btn" id="dnsBtn">Consultar</button></div>
+  <button class="btn sec dns-ej">www.udea.edu.co</button>
+  <button class="btn sec dns-ej">mail.udea.edu.co</button>
+  <button class="btn sec dns-ej">ns.udea.edu.co</button>
+  <button class="btn sec dns-ej">192.168.1.10</button>
+  <button class="btn sec dns-ej">ftp.udea.edu.co</button>
+  <div class="consola" id="dnsOut">C:\&gt; nslookup ...</div>
+
+  <h3>Registros configurados</h3>
+  <table>
+    <tr><th>Nombre</th><th>Tipo</th><th>Valor</th><th>Para qué sirve</th></tr>
+    <tr><td>udea.edu.co</td><td>SOA</td><td>ns.udea.edu.co</td><td>Ficha de la zona: servidor principal, contacto y tiempos</td></tr>
+    <tr><td>udea.edu.co</td><td>NS</td><td>ns.udea.edu.co</td><td>Indica cuál es el servidor DNS del dominio</td></tr>
+    <tr><td>udea.edu.co</td><td>MX 10</td><td>mail.udea.edu.co</td><td>Servidor de correo (10 = prioridad)</td></tr>
+    <tr><td>ns, mail, www</td><td>A</td><td>192.168.1.10</td><td>Nombre a IP</td></tr>
+    <tr><td>10 (192.168.1.10)</td><td>PTR</td><td>ns / mail / www</td><td>IP a nombre (zona inversa)</td></tr>
+  </table>
+
+  <h3>Configuración</h3>
+  <div class="acc"><div class="acc-titulo">1. Declarar las zonas <span>+</span></div><div class="acc-cuerpo">
+    <p>En <code>/etc/bind/named.conf.local</code> se indica de qué dominios es responsable el servidor y dónde están sus datos. La zona inversa se escribe al revés más <code>.in-addr.arpa</code>.</p>
+    <pre>zone "udea.edu.co" {
+  type master;
+  file "db.udea.edu.co.zone";
+};
+zone "1.168.192.in-addr.arpa" {
+  type master;
+  file "db.192.168.1";
+};</pre>
+    <pre>sudo named-checkconf      # sin salida = sin errores</pre>
+  </div></div>
+  <div class="acc"><div class="acc-titulo">2. Zona directa (nombre a IP) <span>+</span></div><div class="acc-cuerpo">
+    <p>Archivo <code>/var/cache/bind/db.udea.edu.co.zone</code>:</p>
+    <pre>$ORIGIN udea.edu.co.
+$TTL 86400
+@ IN SOA ns.udea.edu.co. info.udea.edu.co. (
+    2026101601 ; serie
+    6H ; refresco
+    1H ; reintentos
+    2W ; expira
+    3H ; minimo
+)
+@     NS    ns
+@     MX 10 mail
+ns    A     192.168.1.10
+mail  A     192.168.1.10
+www   A     192.168.1.10</pre>
+    <pre>sudo named-checkzone udea.edu.co /var/cache/bind/db.udea.edu.co.zone
+zone udea.edu.co/IN: loaded serial 2026101601
+OK</pre>
+  </div></div>
+  <div class="acc"><div class="acc-titulo">3. Zona inversa (IP a nombre) <span>+</span></div><div class="acc-cuerpo">
+    <p>Archivo <code>/var/cache/bind/db.192.168.1</code>. Solo se escribe el último número (10), porque el resto ya está en el nombre de la zona.</p>
+    <pre>@   NS   ns.udea.edu.co.
+10  PTR  ns.udea.edu.co.
+10  PTR  mail.udea.edu.co.
+10  PTR  www.udea.edu.co.</pre>
+    <pre>sudo named-checkzone 1.168.192.in-addr.arpa /var/cache/bind/db.192.168.1
+sudo systemctl restart bind9</pre>
+  </div></div>
+  <div class="acc"><div class="acc-titulo">Correcciones hechas a la guía <span>+</span></div><div class="acc-cuerpo">
+    <ul>
+      <li>El registro SOA de la guía dice <code>ns.dominio.edu.co.ni.</code>; sobraba el <code>.ni</code>.</li>
+      <li>La guía indica <code>nameserver 192.168.1.1</code> en <code>resolv.conf</code>, pero el DNS es 192.168.1.10. Ese paso se omitió porque el cliente recibe el DNS por DHCP.</li>
+      <li>La serie se actualizó a la fecha del proyecto (2026101601).</li>
+    </ul>
+  </div></div>
+
+  <h3>Pruebas desde el cliente</h3>
+  <table>
+    <tr><th>Prueba</th><th>Comando en XP</th><th>Resultado</th></tr>
+    <tr><td>Zona directa</td><td><code>nslookup www.udea.edu.co</code></td><td>192.168.1.10</td></tr>
+    <tr><td>Zona inversa</td><td><code>nslookup 192.168.1.10</code></td><td>Nombre en udea.edu.co</td></tr>
+    <tr><td>Integración web</td><td><code>http://www.udea.edu.co</code></td><td>Abre este sitio</td></tr>
+    <tr><td>Servicio apagado</td><td><code>nslookup www.udea.edu.co</code></td><td>Sin respuesta del servidor</td></tr>
+  </table>
+</section>
+
+<!-- ================= APACHE ================= -->
+<section class="panel" id="apache">
+  <h2>Apache <span class="estado">Funcionando</span></h2>
+  <p><b>Apache</b> es un servidor web: recibe peticiones de los navegadores por el protocolo <b>HTTP</b> (puerto <b>TCP 80</b>) y les responde con páginas, imágenes o archivos. Esta misma página la está entregando Apache desde la carpeta <code>/var/www/html</code> del servidor.</p>
+
+  <h3>Qué pasa cuando abres www.udea.edu.co</h3>
+  <div class="stepper" id="st-web">
+    <div class="st-flujo"></div>
+    <div class="st-num"></div>
+    <h4 class="st-tit"></h4>
+    <p class="st-txt"></p>
+    <div class="st-puntos"></div>
+    <button class="btn sec st-ant">Anterior</button>
+    <button class="btn st-sig">Siguiente</button>
+  </div>
+
+  <h3>Códigos de respuesta HTTP</h3>
+  <p>Cada respuesta de Apache lleva un código. Haz clic en uno:</p>
+  <div class="codigos">
+    <button class="btn sec cod" data-c="200">200</button>
+    <button class="btn sec cod" data-c="301">301</button>
+    <button class="btn sec cod" data-c="403">403</button>
+    <button class="btn sec cod" data-c="404">404</button>
+    <button class="btn sec cod" data-c="500">500</button>
+    <button class="btn sec cod" data-c="sin">Sin respuesta</button>
+  </div>
+  <div class="nota" id="codOut">Selecciona un código para ver qué significa.</div>
+
+  <h3>Estructura de Apache en Ubuntu</h3>
+  <table>
+    <tr><th>Ruta</th><th>Función</th></tr>
+    <tr><td>/etc/apache2/apache2.conf</td><td>Archivo principal de configuración</td></tr>
+    <tr><td>/etc/apache2/ports.conf</td><td>Puertos donde escucha (80)</td></tr>
+    <tr><td>/etc/apache2/sites-available</td><td>Sitios configurados</td></tr>
+    <tr><td>/etc/apache2/sites-enabled</td><td>Sitios activos</td></tr>
+    <tr><td>/etc/apache2/mods-enabled</td><td>Módulos activos</td></tr>
+    <tr><td>/var/www/html</td><td>Carpeta con las páginas publicadas</td></tr>
+    <tr><td>/var/log/apache2</td><td>Registros de accesos y errores</td></tr>
+  </table>
+
+  <h3>Configuración</h3>
+  <div class="acc"><div class="acc-titulo">1. Verificar el servicio <span>+</span></div><div class="acc-cuerpo">
+    <pre>sudo systemctl status apache2</pre>
+    <p>El aviso <code>AH00558</code> solo indica que no hay <code>ServerName</code> definido; no impide el funcionamiento.</p>
+  </div></div>
+  <div class="acc"><div class="acc-titulo">2. Prueba con la página por defecto <span>+</span></div><div class="acc-cuerpo">
+    <p>Desde XP se abrió <code>http://192.168.1.10</code> y <code>http://www.udea.edu.co</code>. Ambas mostraron "Apache2 Ubuntu Default Page", lo que confirma Apache funcionando y el DNS resolviendo el nombre.</p>
+  </div></div>
+  <div class="acc"><div class="acc-titulo">3. Publicar el sitio propio <span>+</span></div><div class="acc-cuerpo">
+    <pre>sudo cp /var/www/html/index.html /var/www/html/index.html.original
+sudo nano /var/www/html/index.html</pre>
+    <p>Se reemplazó la página por defecto por este sitio. Apache lo lee en cada petición, así que no requiere reinicio.</p>
+  </div></div>
+  <div class="acc"><div class="acc-titulo">4. Control del servicio <span>+</span></div><div class="acc-cuerpo">
+    <pre>sudo systemctl start apache2     # encender
+sudo systemctl stop apache2      # apagar
+sudo systemctl restart apache2   # reiniciar
+sudo systemctl reload apache2    # recargar configuración</pre>
+  </div></div>
+
+  <h3>Pruebas desde el cliente</h3>
+  <table>
+    <tr><th>Prueba</th><th>En XP</th><th>Resultado</th></tr>
+    <tr><td>Acceso por IP</td><td><code>http://192.168.1.10</code></td><td>Carga el sitio</td></tr>
+    <tr><td>Acceso por nombre</td><td><code>http://www.udea.edu.co</code></td><td>Carga el sitio (DNS + Apache)</td></tr>
+    <tr><td>Puerto 80</td><td><code>telnet 192.168.1.10 80</code></td><td>Conecta</td></tr>
+    <tr><td>Servicio apagado</td><td>Recargar con Ctrl + F5</td><td>Error de conexión</td></tr>
+  </table>
+</section>
+
+<!-- ================= FTP ================= -->
+<section class="panel" id="ftp">
+  <h2>FTP <span class="estado">Funcionando</span></h2>
+  <p><b>FTP</b> (File Transfer Protocol) sirve para subir y descargar archivos entre un cliente y un servidor. Usa dos conexiones: una de <b>control</b> por el puerto <b>TCP 21</b>, donde viajan los comandos y respuestas, y otra de <b>datos</b>, donde viajan los archivos y listados. Se usó <b>vsftpd</b> (Very Secure FTP Daemon).</p>
+
+  <h3>Prueba la sesión FTP aquí (simulador)</h3>
+  <p>Simula la sesión hecha desde la consola de XP. Prueba <code>dir</code>, <code>get prueba_servidor.txt</code>, <code>put prueba_cliente.txt</code>, <code>pwd</code>, <code>cd ..</code>, <code>help</code> o <code>bye</code>.</p>
+  <div class="consola" id="ftpOut"></div>
+  <div class="entrada"><input id="ftpIn" placeholder="ftp&gt; escribe un comando"><button class="btn" id="ftpBtn">Enviar</button></div>
+  <button class="btn sec" id="ftpReset">Reiniciar sesión</button>
+
+  <h3>Modo activo y pasivo</h3>
+  <table>
+    <tr><th>Modo</th><th>Quién abre la conexión de datos</th><th>Observación</th></tr>
+    <tr><td>Activo (PORT)</td><td>El servidor se conecta al cliente</td><td>Lo usa la consola de XP. El firewall de Windows puede bloquearlo.</td></tr>
+    <tr><td>Pasivo (PASV)</td><td>El cliente se conecta al servidor</td><td>Más compatible con firewalls; por eso el servidor sugiere "Consider using PASV".</td></tr>
+  </table>
+
+  <h3>Configuración de vsftpd</h3>
+  <table>
+    <tr><th>Opción en /etc/vsftpd.conf</th><th>Valor</th><th>Para qué sirve</th></tr>
+    <tr><td>anonymous_enable</td><td>NO</td><td>No permite entrar sin usuario y contraseña</td></tr>
+    <tr><td>local_enable</td><td>YES</td><td>Permite entrar con usuarios del sistema</td></tr>
+    <tr><td>write_enable</td><td>YES</td><td>Permite subir, borrar y renombrar archivos</td></tr>
+    <tr><td>chroot_local_user</td><td>YES</td><td>Encierra al usuario en su carpeta; no ve el resto del servidor</td></tr>
+    <tr><td>allow_writeable_chroot</td><td>YES</td><td>Permite el encierro aunque la carpeta tenga escritura</td></tr>
+    <tr><td>ftpd_banner</td><td>Bienvenido al servidor FTP de udea.edu.co</td><td>Mensaje de bienvenida propio</td></tr>
+    <tr><td>local_umask</td><td>077 (Ubuntu)</td><td>Los archivos subidos quedan con permiso -rw------- (solo el dueño)</td></tr>
+  </table>
+  <div class="acc"><div class="acc-titulo">1. Respaldo y configuración <span>+</span></div><div class="acc-cuerpo">
+    <pre>sudo cp /etc/vsftpd.conf /etc/vsftpd.conf.original
+sudo sed -i 's/^#write_enable=YES/write_enable=YES/' /etc/vsftpd.conf
+sudo sed -i 's/^#chroot_local_user=YES/chroot_local_user=YES/' /etc/vsftpd.conf
+echo 'allow_writeable_chroot=YES' | sudo tee -a /etc/vsftpd.conf
+echo 'ftpd_banner=Bienvenido al servidor FTP de udea.edu.co' | sudo tee -a /etc/vsftpd.conf</pre>
+  </div></div>
+  <div class="acc"><div class="acc-titulo">2. Usuario dedicado y archivo de prueba <span>+</span></div><div class="acc-cuerpo">
+    <pre>sudo adduser ftpudea
+echo "Archivo de prueba del servidor FTP udea.edu.co" | sudo tee /home/ftpudea/prueba_servidor.txt
+sudo chown ftpudea:ftpudea /home/ftpudea/prueba_servidor.txt</pre>
+    <p>Se creó un usuario exclusivo para FTP para no exponer la cuenta del administrador.</p>
+  </div></div>
+  <div class="acc"><div class="acc-titulo">3. Reinicio <span>+</span></div><div class="acc-cuerpo">
+    <pre>sudo systemctl restart vsftpd
+systemctl status vsftpd</pre>
+  </div></div>
+
+  <h3>Pruebas desde el cliente</h3>
+  <table>
+    <tr><th>Prueba</th><th>En XP</th><th>Resultado</th></tr>
+    <tr><td>Conexión y login</td><td><code>ftp 192.168.1.10</code> con ftpudea</td><td>Banner propio y 230 Login successful</td></tr>
+    <tr><td>Listar</td><td><code>dir</code></td><td>Muestra los archivos del servidor</td></tr>
+    <tr><td>Descargar</td><td><code>get prueba_servidor.txt</code></td><td>226 Transfer complete, verificado con <code>type</code></td></tr>
+    <tr><td>Subir</td><td><code>put prueba_cliente.txt</code></td><td>226 Transfer complete, verificado en el servidor con <code>cat</code></td></tr>
+    <tr><td>Servicio apagado</td><td><code>ftp 192.168.1.10</code></td><td>No conecta</td></tr>
+  </table>
+</section>
+
+<!-- ================= TOPOLOGIA ================= -->
+<section class="panel" id="red">
+  <h2>Topología de la red</h2>
+  <div class="topo">
+    <div class="nodo"><b>Servidor Ubuntu 20.04</b><br>192.168.1.10<br><small>DHCP - DNS - Apache - FTP</small></div>
+    <div class="linea">Red interna<div></div>192.168.1.0/24</div>
+    <div class="nodo"><b>Cliente Windows XP</b><br>192.168.1.50<br><small>IP automática por DHCP</small></div>
+  </div>
+  <h3>Cómo trabajan juntos los cuatro servicios</h3>
+  <div class="stepper" id="st-red">
+    <div class="st-flujo"></div>
+    <div class="st-num"></div>
+    <h4 class="st-tit"></h4>
+    <p class="st-txt"></p>
+    <div class="st-puntos"></div>
+    <button class="btn sec st-ant">Anterior</button>
+    <button class="btn st-sig">Siguiente</button>
+  </div>
+  <h3>Direccionamiento</h3>
+  <table>
+    <tr><th>Elemento</th><th>Valor</th></tr>
+    <tr><td>Red</td><td>192.168.1.0 / 255.255.255.0</td></tr>
+    <tr><td>Servidor</td><td>192.168.1.10 (fija)</td></tr>
+    <tr><td>Puerta de enlace</td><td>192.168.1.1</td></tr>
+    <tr><td>Rango DHCP</td><td>192.168.1.50 - 192.168.1.100</td></tr>
+    <tr><td>Broadcast</td><td>192.168.1.255</td></tr>
+    <tr><td>Tipo de red en VirtualBox</td><td>Red interna (intnet)</td></tr>
+  </table>
+</section>
+
+<!-- ================= QUIZ ================= -->
+<section class="panel" id="quiz">
+  <h2>Quiz rápido</h2>
+  <p>Comprueba lo aprendido en el proyecto.</p>
+  <div id="quizCont"></div>
+  <div class="nota" id="quizRes">Respondidas: 0</div>
+</section>
+
+</main>
+
+<footer>Universidad Católica Luis Amigó - Administración de Servidores Linux - 2026</footer>
+
+<script>
+(function () {
+  function $(id) { return document.getElementById(id); }
+  function todos(sel) { return document.querySelectorAll(sel); }
+
+  /* ---------- Pestañas ---------- */
+  var botones = todos('nav button'), paneles = todos('.panel');
+  function mostrar(id) {
+    var i;
+    for (i = 0; i < paneles.length; i++) paneles[i].classList.remove('activo');
+    for (i = 0; i < botones.length; i++) {
+      if (botones[i].getAttribute('data-tab') === id) botones[i].classList.add('activo');
+      else botones[i].classList.remove('activo');
+    }
+    $(id).classList.add('activo');
+    window.scrollTo(0, 0);
+  }
+  var i;
+  for (i = 0; i < botones.length; i++) botones[i].onclick = function () { mostrar(this.getAttribute('data-tab')); };
+  var tarjetas = todos('.tarjeta');
+  for (i = 0; i < tarjetas.length; i++) tarjetas[i].onclick = function () { mostrar(this.getAttribute('data-ir')); };
+
+  /* ---------- Acordeones ---------- */
+  var titulos = todos('.acc-titulo');
+  for (i = 0; i < titulos.length; i++) {
+    titulos[i].onclick = function () {
+      var acc = this.parentNode;
+      acc.classList.toggle('abierto');
+      this.getElementsByTagName('span')[0].innerHTML = acc.classList.contains('abierto') ? '&minus;' : '+';
+    };
+  }
+
+  /* ---------- Encabezado ---------- */
+  var host = window.location.hostname;
+  $('acceso').innerHTML = 'Accediste por: ' + (/^[0-9.]+$/.test(host) ? 'IP (' + host + ')' : 'DNS (' + host + ')');
+  function reloj() {
+    var d = new Date();
+    function z(n) { return n < 10 ? '0' + n : n; }
+    $('reloj').innerHTML = z(d.getHours()) + ':' + z(d.getMinutes()) + ':' + z(d.getSeconds());
+  }
+  reloj(); setInterval(reloj, 1000);
+  var listos = 4, total = 4;
+  setTimeout(function () { $('relleno').style.width = (listos / total * 100) + '%'; }, 200);
+  $('txtProgreso').innerHTML = 'Avance del proyecto: ' + listos + ' de ' + total + ' servicios funcionando';
+
+  /* ---------- Pasos animados ---------- */
+  function flujo(a, msg, b, haciaDerecha) {
+    var flecha = haciaDerecha ? msg + ' &#9654;' : '&#9664; ' + msg;
+    return '<div class="nm">' + a + '</div><div class="fl">' + flecha + '<div></div></div><div class="nm">' + b + '</div>';
+  }
+  function stepper(id, pasos) {
+    var c = $(id), n = 0;
+    var ant = c.querySelector('.st-ant'), sig = c.querySelector('.st-sig');
+    function pintar() {
+      var p = pasos[n], puntos = '', k;
+      c.querySelector('.st-flujo').innerHTML = p[2];
+      c.querySelector('.st-num').innerHTML = 'Paso ' + (n + 1) + ' de ' + pasos.length;
+      c.querySelector('.st-tit').innerHTML = p[0];
+      c.querySelector('.st-txt').innerHTML = p[1];
+      for (k = 0; k < pasos.length; k++) puntos += '<i class="' + (k <= n ? 'on' : '') + '"></i>';
+      c.querySelector('.st-puntos').innerHTML = puntos;
+      ant.disabled = n === 0;
+      sig.innerHTML = n === pasos.length - 1 ? 'Reiniciar' : 'Siguiente';
+    }
+    ant.onclick = function () { if (n > 0) { n--; pintar(); } };
+    sig.onclick = function () { n = n === pasos.length - 1 ? 0 : n + 1; pintar(); };
+    pintar();
+  }
+
+  stepper('st-dhcp', [
+    ['D - Discover (descubrimiento)', 'El cliente XP enciende sin IP y envía un mensaje a toda la red (broadcast): "¿Hay algún servidor DHCP?".', flujo('Cliente XP', 'DHCPDISCOVER', 'Servidor', true)],
+    ['O - Offer (oferta)', 'El servidor revisa su rango (192.168.1.50 - 192.168.1.100) y ofrece una IP libre: 192.168.1.50, junto con máscara, puerta de enlace y DNS.', flujo('Cliente XP', 'DHCPOFFER 192.168.1.50', 'Servidor', false)],
+    ['R - Request (solicitud)', 'El cliente acepta la oferta y pide formalmente esa IP al servidor.', flujo('Cliente XP', 'DHCPREQUEST', 'Servidor', true)],
+    ['A - Acknowledge (confirmación)', 'El servidor confirma el préstamo y lo registra en /var/lib/dhcp/dhcpd.leases. Desde ahora el cliente usa 192.168.1.50 durante el tiempo de préstamo.', flujo('Cliente XP', 'DHCPACK', 'Servidor', false)]
+  ]);
+
+  stepper('st-web', [
+    ['El usuario escribe la dirección', 'En el navegador de XP se escribe http://www.udea.edu.co. El navegador necesita la IP del servidor.', flujo('Navegador', 'www.udea.edu.co', 'Cliente XP', true)],
+    ['Consulta al DNS', 'XP pregunta al DNS 192.168.1.10 (recibido por DHCP) y bind9 responde con el registro A: 192.168.1.10.', flujo('Cliente XP', '¿www.udea.edu.co? = 192.168.1.10', 'DNS bind9', true)],
+    ['Conexión al puerto 80', 'El navegador abre una conexión TCP con 192.168.1.10 en el puerto 80, donde escucha Apache.', flujo('Cliente XP', 'TCP puerto 80', 'Apache', true)],
+    ['Petición HTTP', 'El navegador envía la petición GET / HTTP/1.1 indicando el nombre del sitio.', flujo('Cliente XP', 'GET /', 'Apache', true)],
+    ['Apache busca el archivo', 'Apache toma /var/www/html/index.html, que es esta página.', flujo('Apache', 'lee', '/var/www/html', true)],
+    ['Respuesta 200 OK', 'Apache devuelve el código 200 OK con el contenido HTML, y el navegador dibuja la página.', flujo('Cliente XP', '200 OK + HTML', 'Apache', false)]
+  ]);
+
+  stepper('st-red', [
+    ['1. DHCP: el cliente obtiene su configuración', 'Al conectarse, XP recibe IP 192.168.1.50, puerta 192.168.1.1 y DNS 192.168.1.10.', flujo('Cliente XP', 'IP + DNS', 'DHCP', false)],
+    ['2. DNS: el cliente resuelve nombres', 'XP pregunta por www.udea.edu.co y el DNS responde 192.168.1.10.', flujo('Cliente XP', 'nombre = IP', 'DNS', true)],
+    ['3. Apache: el cliente ve el sitio', 'Con la IP resuelta, el navegador pide la página y Apache la entrega.', flujo('Cliente XP', 'HTTP', 'Apache', true)],
+    ['4. FTP: el cliente intercambia archivos', 'Con el usuario ftpudea, XP sube y descarga archivos del servidor.', flujo('Cliente XP', 'get / put', 'FTP', true)]
+  ]);
+
+  /* ---------- nslookup simulado ---------- */
+  var directos = { 'www.udea.edu.co': '192.168.1.10', 'mail.udea.edu.co': '192.168.1.10', 'ns.udea.edu.co': '192.168.1.10' };
+  var cab = 'Servidor:  ns.udea.edu.co\nAddress:  192.168.1.10\n\n';
+  function consultar(q) {
+    q = q.replace(/^\s+|\s+$/g, '').toLowerCase();
+    var r = 'C:\\> nslookup ' + q + '\n' + cab;
+    if (directos[q]) r += 'Nombre:  ' + q + '\nAddress:  ' + directos[q] + '\n\n(registro A de la zona directa)';
+    else if (q === '192.168.1.10') r += 'Nombre:  ns.udea.edu.co\nAddress:  192.168.1.10\n\n(registro PTR de la zona inversa: 10.1.168.192.in-addr.arpa)';
+    else if (q === 'udea.edu.co') r += 'Nombre:  udea.edu.co\n\n(el dominio tiene registros NS y MX, no registro A)';
+    else r += '*** ns.udea.edu.co no encuentra ' + q + ': Non-existent domain\n\n(no existe ese registro en la zona)';
+    $('dnsOut').innerHTML = r.replace(/</g, '&lt;');
+  }
+  $('dnsBtn').onclick = function () { consultar($('dnsIn').value); };
+  $('dnsIn').onkeydown = function (e) { if ((e || window.event).keyCode === 13) consultar(this.value); };
+  var ejemplos = todos('.dns-ej');
+  for (i = 0; i < ejemplos.length; i++) ejemplos[i].onclick = function () { $('dnsIn').value = this.innerHTML; consultar(this.innerHTML); };
+  consultar('www.udea.edu.co');
+
+  /* ---------- Códigos HTTP ---------- */
+  var codigos = {
+    '200': '<b>200 OK</b>: la petición funcionó y Apache envió el contenido. Es lo que ocurre al abrir este sitio.',
+    '301': '<b>301 Moved Permanently</b>: el recurso cambió de dirección y el navegador es redirigido.',
+    '403': '<b>403 Forbidden</b>: el archivo existe pero Apache no tiene permiso para mostrarlo.',
+    '404': '<b>404 Not Found</b>: no existe el archivo pedido. Prueba abrir http://www.udea.edu.co/noexiste.html',
+    '500': '<b>500 Internal Server Error</b>: error en el servidor, por ejemplo una configuración mal escrita.',
+    'sin': '<b>Sin respuesta</b>: Apache está apagado (systemctl stop apache2) y el navegador muestra error de conexión. Es la prueba de encendido y apagado.'
+  };
+  var cods = todos('.cod');
+  for (i = 0; i < cods.length; i++) cods[i].onclick = function () { $('codOut').innerHTML = codigos[this.getAttribute('data-c')]; };
+
+  /* ---------- Simulador FTP ---------- */
+  var servidor, local, abierta, salida = $('ftpOut');
+  function esc(t) { return t.replace(/&/g, '&amp;').replace(/</g, '&lt;'); }
+  function escribir(t) { salida.innerHTML += esc(t) + '\n'; salida.scrollTop = salida.scrollHeight; }
+  function iniciarFtp() {
+    servidor = [{ n: 'prueba_servidor.txt', t: 47, p: '-rw-r--r--' }];
+    local = ['prueba_cliente.txt'];
+    abierta = true;
+    salida.innerHTML = '';
+    escribir('C:\\> ftp 192.168.1.10\nConectado a 192.168.1.10.\n220 Bienvenido al servidor FTP de udea.edu.co\nUsuario (192.168.1.10:(none)): ftpudea\n331 Please specify the password.\nContraseña:\n230 Login successful.');
+  }
+  function buscar(n) { for (var k = 0; k < servidor.length; k++) if (servidor[k].n === n) return k; return -1; }
+  function ftp(cmd) {
+    cmd = cmd.replace(/^\s+|\s+$/g, '');
+    if (!cmd) return;
+    escribir('ftp> ' + cmd);
+    if (!abierta) { escribir('No conectado. Usa "Reiniciar sesión".'); return; }
+    var partes = cmd.split(/\s+/), c = partes[0].toLowerCase(), arg = partes[1], k, lista;
+    if (c === 'help' || c === '?') {
+      escribir('Comandos: dir, ls, get archivo, put archivo, delete archivo, pwd, cd carpeta, bye');
+    } else if (c === 'dir' || c === 'ls') {
+      lista = '';
+      for (k = 0; k < servidor.length; k++) lista += servidor[k].p + '    1 1002     1002    ' + servidor[k].t + ' Oct 16  ' + servidor[k].n + '\n';
+      escribir('200 PORT command successful. Consider using PASV.\n150 Here comes the directory listing.\n' + lista + '226 Directory send OK.');
+    } else if (c === 'get') {
+      if (!arg) escribir('Falta el nombre del archivo.');
+      else if ((k = buscar(arg)) < 0) escribir('200 PORT command successful. Consider using PASV.\n550 Failed to open file.');
+      else escribir('200 PORT command successful. Consider using PASV.\n150 Opening BINARY mode data connection for ' + arg + ' (' + servidor[k].t + ' bytes).\n226 Transfer complete.\n(el archivo quedó en C:\\Documents and Settings\\Administrador)');
+    } else if (c === 'put') {
+      if (!arg) escribir('Falta el nombre del archivo.');
+      else if (local.indexOf(arg) < 0) escribir(arg + ': El sistema no puede hallar el archivo especificado.');
+      else {
+        if (buscar(arg) < 0) servidor.push({ n: arg, t: 23, p: '-rw-------' });
+        escribir('200 PORT command successful. Consider using PASV.\n150 Ok to send data.\n226 Transfer complete.\n(en el servidor queda como /home/ftpudea/' + arg + ' con permiso -rw-------)');
+      }
+    } else if (c === 'delete') {
+      if ((k = buscar(arg)) < 0) escribir('550 Delete operation failed.');
+      else { servidor.splice(k, 1); escribir('250 Delete operation successful.'); }
+    } else if (c === 'pwd') {
+      escribir('257 "/" is the current directory\n(chroot: el usuario ve su carpeta /home/ftpudea como si fuera la raíz)');
+    } else if (c === 'cd') {
+      escribir(arg === '..' || arg === '/' ? '250 Directory successfully changed.\n(sigue en "/": el chroot impide salir de su carpeta)' : '550 Failed to change directory.');
+    } else if (c === 'bye' || c === 'quit') {
+      escribir('221 Goodbye.'); abierta = false;
+    } else {
+      escribir('Comando no válido. Escribe help.');
+    }
+  }
+  $('ftpBtn').onclick = function () { ftp($('ftpIn').value); $('ftpIn').value = ''; };
+  $('ftpIn').onkeydown = function (e) { if ((e || window.event).keyCode === 13) { ftp(this.value); this.value = ''; } };
+  $('ftpReset').onclick = iniciarFtp;
+  iniciarFtp();
+
+  /* ---------- Quiz ---------- */
+  var preguntas = [
+    ['¿Qué servicio le entregó al cliente XP la IP 192.168.1.50?', ['DNS', 'DHCP', 'Apache', 'FTP'], 1, 'El DHCP asigna IPs dentro del rango 192.168.1.50 - 192.168.1.100.'],
+    ['¿Qué tipo de registro DNS traduce un nombre a una IP?', ['MX', 'PTR', 'A', 'NS'], 2, 'El registro A traduce nombre a IP; PTR hace lo contrario.'],
+    ['¿En qué carpeta guarda Apache las páginas publicadas?', ['/etc/apache2', '/var/www/html', '/home/ftpudea', '/var/cache/bind'], 1, 'Apache sirve el contenido de /var/www/html.'],
+    ['¿Qué hace la opción chroot_local_user=YES en vsftpd?', ['Permite usuarios anónimos', 'Encierra al usuario en su carpeta', 'Cambia el puerto a 22', 'Desactiva la escritura'], 1, 'Con chroot el usuario no puede salir de su carpeta personal.'],
+    ['¿Qué comando de FTP sube un archivo del cliente al servidor?', ['get', 'dir', 'put', 'pwd'], 2, 'put envía un archivo al servidor; get lo descarga.'],
+    ['¿Qué comando valida la sintaxis de un archivo de zona DNS?', ['named-checkzone', 'ipconfig /all', 'systemctl status', 'nslookup'], 0, 'named-checkzone revisa la zona y responde OK si no hay errores.']
+  ];
+  var respondidas = 0, aciertos = 0, html = '', q, o;
+  for (q = 0; q < preguntas.length; q++) {
+    html += '<div class="pregunta" data-q="' + q + '"><b>' + (q + 1) + '. ' + preguntas[q][0] + '</b>';
+    for (o = 0; o < preguntas[q][1].length; o++) html += '<button class="btn" data-o="' + o + '">' + preguntas[q][1][o] + '</button>';
+    html += '<div class="expl"></div></div>';
+  }
+  $('quizCont').innerHTML = html;
+  var opciones = todos('.pregunta button');
+  for (i = 0; i < opciones.length; i++) {
+    opciones[i].onclick = function () {
+      var caja = this.parentNode;
+      if (caja.getAttribute('data-hecha')) return;
+      caja.setAttribute('data-hecha', '1');
+      var p = preguntas[+caja.getAttribute('data-q')], elegida = +this.getAttribute('data-o');
+      var bs = caja.getElementsByTagName('button');
+      bs[p[2]].classList.add('bien');
+      if (elegida !== p[2]) this.classList.add('mal'); else aciertos++;
+      respondidas++;
+      caja.querySelector('.expl').innerHTML = (elegida === p[2] ? 'Correcto. ' : 'Incorrecto. ') + p[3];
+      $('quizRes').innerHTML = 'Respondidas: ' + respondidas + ' de ' + preguntas.length + ' - Aciertos: ' + aciertos;
+    };
+  }
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,15 @@
+$ORIGIN udea.edu.co.
+$TTL 86400      ; 1 dia
+@ IN SOA ns.udea.edu.co. info.udea.edu.co. (
+    2026101601  ; serie
+    6H          ; refresco (6 horas)
+    1H          ; reintentos (1 hora)
+    2W          ; expira (2 semanas)
+    3H          ; minimo (3 horas)
+)
+
+@      NS      ns
+@      MX 10   mail
+ns     A       192.168.1.10
+mail   A       192.168.1.10
+www    A       192.168.1.10
