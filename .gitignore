@@ -1,0 +1,9 @@
+   # Discos y archivos de VirtualBox
+   *.vdi
+   *.vbox
+   *.vbox-prev
+
+   # Datos sensibles o que cambian solos
+   *.leases
+   *.original
+   *.bak
