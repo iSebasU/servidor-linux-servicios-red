@@ -86,6 +86,16 @@ Servidor **Ubuntu 20.04** que ofrece cuatro servicios de red (DHCP, DNS, servido
 | Apache | `http://www.udea.edu.co` | Carga el sitio del proyecto |
 | FTP | `ftp 192.168.1.10` → `get` / `put` | `226 Transfer complete` |
 
+### Evidencias
+
+| DHCP: el cliente recibe IP del servidor | DNS: resolución directa e inversa |
+|---|---|
+| ![DHCP en el cliente](docs/img/01-dhcp-ipconfig-xp.png) | ![DNS en el cliente](docs/img/02-dns-nslookup-xp.png) |
+
+| Apache: sitio abierto por nombre de dominio | FTP: subida y descarga de archivos |
+|---|---|
+| ![Sitio web en el cliente](docs/img/03-apache-sitio-xp.png) | ![FTP en el cliente](docs/img/04-ftp-transferencia-xp.png) |
+
 Cada servicio se probó también **apagado y encendido** (`systemctl stop` / `start`) para demostrar que las respuestas provienen del servidor.
 
 El paso a paso completo está en [`docs/guia-instalacion-y-pruebas.md`](docs/guia-instalacion-y-pruebas.md) y las fallas resueltas en [`docs/problemas-y-soluciones.md`](docs/problemas-y-soluciones.md).
